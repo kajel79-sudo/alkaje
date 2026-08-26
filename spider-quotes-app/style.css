@@ -6,6 +6,11 @@
   아래 [data-theme="..."] 블록이 새로 매칭되면서
   --bg-gradient, --font-color, --card-bg 값만 바뀌고,
   실제 카드/버튼 스타일 코드는 그대로 재사용됩니다.
+
+  레이아웃은 화면 폭에 따라 3단계로 달라집니다. (아래 "반응형 레이아웃" 섹션 참고)
+  - 모바일  (~700px)   : 화면 전체를 꽉 채우는 엣지투엣지 레이아웃
+  - 태블릿  (701~1023px): 화면 중앙에 떠 있는 카드 레이아웃 (중간 크기)
+  - 데스크탑 (1024px~)  : 화면 중앙에 떠 있는 카드 레이아웃 (더 크고, 글자도 큼)
 ---------------------------------------------------------- */
 
 * {
@@ -80,6 +85,19 @@ body[data-theme="mono"] {
 }
 
 /* ============================================
+   앱 셸: 명언 카드 + 액션 바를 감싸는 바깥 래퍼
+   모바일에서는 투명한 레이아웃 컨테이너일 뿐이고,
+   태블릿/데스크탑에서는 이 요소 자체가 카드 모양이 됩니다.
+   (아래 "반응형 레이아웃" 섹션에서 실제 카드 스타일을 부여)
+   ============================================ */
+.app-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ============================================
    메인 명언 카드
    ============================================ */
 .quote-container {
@@ -123,12 +141,18 @@ body[data-theme="mono"] {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
-.quote-ko {
+.quote-sub {
   font-size: clamp(15px, 4vw, 17px);
   line-height: 1.6;
   max-width: 480px;
   margin: 0;
   color: var(--sub-color);
+}
+
+/* 언어가 영어일 때는 quote-sub를 비워두는데(원문과 중복이라),
+   빈 문단이 괜히 줄 간격을 차지하지 않도록 아예 숨겨줍니다. */
+.quote-sub:empty {
+  display: none;
 }
 
 .quote-meta {
@@ -163,18 +187,18 @@ body[data-theme="mono"] {
 }
 
 /* ============================================
-   하단 액션 바 (새 명언 / 테마 / 공유)
+   하단 액션 바 (새 명언 / 테마 / 언어 / 공유)
    ============================================ */
 .action-bar {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
 }
 
 .action-btn {
   flex: 1;
-  max-width: 140px;
+  max-width: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -208,9 +232,9 @@ body[data-theme="mono"] {
 }
 
 /* ============================================
-   테마 선택 바텀시트
+   바텀시트 공통 스타일 (테마 선택 / 언어 선택이 함께 사용)
    ============================================ */
-.theme-modal {
+.sheet-modal {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -220,18 +244,18 @@ body[data-theme="mono"] {
 }
 
 /* hidden 속성이 붙으면 모달 전체가 렌더링되지 않음 */
-.theme-modal[hidden] {
+.sheet-modal[hidden] {
   display: none;
 }
 
-.theme-backdrop {
+.sheet-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   animation: fadeIn 0.25s ease;
 }
 
-.theme-sheet {
+.bottom-sheet {
   position: relative;
   width: 100%;
   max-width: 480px;
@@ -242,7 +266,7 @@ body[data-theme="mono"] {
   animation: slideUp 0.3s ease;
 }
 
-.theme-sheet-handle {
+.sheet-handle {
   width: 40px;
   height: 4px;
   border-radius: 999px;
@@ -250,20 +274,26 @@ body[data-theme="mono"] {
   margin: 4px auto 16px;
 }
 
-.theme-sheet-title {
+.sheet-title {
   margin: 0 0 16px;
   font-size: 16px;
   font-weight: 700;
   text-align: center;
 }
 
-.theme-options {
+.option-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
 
-.theme-option {
+.lang-grid {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.option-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -285,6 +315,22 @@ body[data-theme="mono"] {
 }
 
 .theme-option.is-active .theme-swatch {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.lang-flag {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.lang-option.is-active .lang-flag {
   border-color: #ffffff;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
 }
@@ -349,16 +395,13 @@ body[data-theme="mono"] {
 }
 
 /* ============================================
-   모바일(375~430px) 최적화
+   반응형 레이아웃
    ============================================ */
+
+/* --- 모바일 (기본값, ~700px): 엣지투엣지 레이아웃 --- */
 @media (max-width: 430px) {
   .quote-container {
     padding: 24px 20px;
-  }
-
-  .theme-options {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
   }
 
   .action-btn .label {
@@ -366,12 +409,72 @@ body[data-theme="mono"] {
   }
 }
 
-@media (min-width: 431px) {
-  .theme-modal {
+/* --- 태블릿 (701px~1023px): 중앙 정렬된 카드 레이아웃 --- */
+@media (min-width: 701px) {
+  body {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .app-shell {
+    flex: none;
+    width: 100%;
+    max-width: 620px;
+    border-radius: 28px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+  }
+
+  .quote-container {
+    flex: none;
+    padding: 56px 48px 24px;
+  }
+
+  .sheet-modal {
     align-items: center;
   }
 
-  .theme-sheet {
+  .bottom-sheet {
     border-radius: 24px;
+  }
+}
+
+/* --- 데스크탑 (1024px~): 더 크고 여유로운 카드 레이아웃 --- */
+@media (min-width: 1024px) {
+  .app-shell {
+    max-width: 760px;
+  }
+
+  .quote-container {
+    padding: 72px 72px 32px;
+    gap: 20px;
+  }
+
+  .quote-mark {
+    font-size: 80px;
+  }
+
+  .quote-en {
+    font-size: clamp(26px, 2.6vw, 36px);
+    max-width: 620px;
+  }
+
+  .quote-sub {
+    font-size: clamp(16px, 1.4vw, 19px);
+    max-width: 560px;
+  }
+
+  .action-bar {
+    gap: 16px;
+    padding: 20px 32px 36px;
+  }
+
+  .action-btn {
+    max-width: 140px;
+    padding: 14px 10px;
   }
 }

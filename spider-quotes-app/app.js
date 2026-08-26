@@ -2,7 +2,8 @@
   app.js
   ---------------------------------------------------------
   화면에 실제로 명언을 그려주고, 버튼 클릭에 반응하는 코드입니다.
-  data.js 에서 만든 quotesData 배열을 사용합니다.
+  data.js 에서 만든 quotesData 배열과, i18n.js 에서 만든 번역
+  사전(uiStrings, themeTagTranslations)을 사용합니다.
 
   이 파일은 위에서 아래로 읽으면 흐름이 이해되도록
   "1. 화면 요소 찾기 → 2. 상태값 → 3. 기능 함수 → 4. 이벤트 연결 →
@@ -14,18 +15,23 @@
 ------------------------------------------ */
 const quoteContainer = document.getElementById("quote-container");
 const quoteEnEl = document.getElementById("quote-en");
-const quoteKoEl = document.getElementById("quote-ko");
+const quoteSubEl = document.getElementById("quote-sub");
 const quoteSpeakerEl = document.getElementById("quote-speaker");
 const quoteMovieEl = document.getElementById("quote-movie");
 const quoteThemeBadgeEl = document.getElementById("quote-theme");
 
 const btnShuffle = document.getElementById("btn-shuffle");
 const btnTheme = document.getElementById("btn-theme");
+const btnLang = document.getElementById("btn-lang");
 const btnShare = document.getElementById("btn-share");
 
 const themeModal = document.getElementById("theme-modal");
 const themeBackdrop = document.getElementById("theme-backdrop");
 const themeOptions = document.querySelectorAll(".theme-option");
+
+const langModal = document.getElementById("lang-modal");
+const langBackdrop = document.getElementById("lang-backdrop");
+const langOptions = document.querySelectorAll(".lang-option");
 
 const toastEl = document.getElementById("toast");
 
@@ -35,8 +41,13 @@ const toastEl = document.getElementById("toast");
 // 화면에 지금 표시 중인 명언의 id (같은 명언이 연속으로 나오지 않게 하는 용도)
 let currentQuoteId = null;
 
-// 테마는 localStorage에 저장해서, 새로고침해도 마지막에 고른 테마가 유지되게 합니다.
+// 현재 UI 언어. "ko" | "en" | "ja" 중 하나이며, localStorage에 저장되어
+// 새로고침해도 유지됩니다.
+let currentLang = "ko";
+
 const THEME_STORAGE_KEY = "spider-quotes-theme";
+const LANG_STORAGE_KEY = "spider-quotes-lang";
+const SUPPORTED_LANGS = ["ko", "en", "ja"];
 
 /* -----------------------------------------
    3. 기능 함수들
@@ -60,14 +71,35 @@ function pickRandomQuote(excludeId) {
 }
 
 /**
+ * 현재 언어(currentLang)에 맞는 번역문을 반환합니다.
+ * 영어를 선택했을 때는 quote-en과 내용이 겹치므로 빈 문자열을 돌려주고,
+ * 화면에서는 CSS(:empty)로 알아서 숨겨집니다.
+ */
+function getSubtitleText(quote) {
+  if (currentLang === "ko") return quote.quote_ko;
+  if (currentLang === "ja") return quote.quote_ja;
+  return "";
+}
+
+/**
+ * quote.theme(한국어 태그)를 현재 언어에 맞게 번역합니다.
+ * 번역이 없으면(사전에 없는 값) 원래 한국어 값을 그대로 보여줍니다.
+ */
+function getThemeTagText(themeKo) {
+  if (currentLang === "ko") return themeKo;
+  const translated = themeTagTranslations[themeKo];
+  return translated ? translated[currentLang] : themeKo;
+}
+
+/**
  * 전달받은 quote 객체 내용을 화면 요소에 채워 넣습니다.
  */
 function renderQuote(quote) {
   quoteEnEl.textContent = quote.quote_en;
-  quoteKoEl.textContent = quote.quote_ko;
+  quoteSubEl.textContent = getSubtitleText(quote);
   quoteSpeakerEl.textContent = `— ${quote.speaker}`;
   quoteMovieEl.textContent = quote.movie;
-  quoteThemeBadgeEl.textContent = `#${quote.theme}`;
+  quoteThemeBadgeEl.textContent = `#${getThemeTagText(quote.theme)}`;
 
   currentQuoteId = quote.id;
 }
@@ -88,37 +120,83 @@ function showNewQuote() {
 }
 
 /**
- * 테마 선택 바텀시트를 엽니다. (F-02)
+ * 바텀시트(모달) 하나를 엽니다. 테마 시트와 언어 시트가 이 함수를
+ * 공통으로 사용합니다.
  */
-function openThemeModal() {
-  themeModal.hidden = false;
-  markActiveThemeOption(document.body.dataset.theme);
+function openSheet(modalEl) {
+  modalEl.hidden = false;
 }
 
 /**
- * 테마 선택 바텀시트를 닫습니다.
+ * 바텀시트(모달) 하나를 닫습니다.
  */
-function closeThemeModal() {
-  themeModal.hidden = true;
+function closeSheet(modalEl) {
+  modalEl.hidden = true;
 }
 
 /**
- * 선택된 테마를 실제로 적용합니다.
+ * 현재 열려 있는 바텀시트가 있으면 닫습니다. (Esc 키 처리용)
+ */
+function closeAnyOpenSheet() {
+  if (!themeModal.hidden) closeSheet(themeModal);
+  if (!langModal.hidden) closeSheet(langModal);
+}
+
+/**
+ * 선택된 테마를 실제로 적용합니다. (F-02)
  * body의 data-theme 속성만 바꾸면, style.css의 [data-theme="..."]
  * 규칙이 알아서 배경/글자색/카드색(CSS 변수)을 바꿔줍니다.
  */
 function applyTheme(themeValue) {
   document.body.dataset.theme = themeValue;
   localStorage.setItem(THEME_STORAGE_KEY, themeValue);
-  markActiveThemeOption(themeValue);
+  markActiveOption(themeOptions, "themeValue", themeValue);
 }
 
 /**
- * 바텀시트 안에서 현재 선택된 테마 버튼에 is-active 표시를 해줍니다.
+ * 선택된 언어를 실제로 적용합니다.
+ * - html lang 속성 갱신 (접근성/SEO)
+ * - data-i18n / data-i18n-aria 속성이 붙은 모든 요소의 문구 갱신
+ * - 지금 보이고 있는 명언을 새 언어로 다시 렌더링
+ * - 선택값을 localStorage에 저장해서 다음 방문 때도 유지
  */
-function markActiveThemeOption(themeValue) {
-  themeOptions.forEach((option) => {
-    const isActive = option.dataset.themeValue === themeValue;
+function applyLanguage(langValue) {
+  currentLang = langValue;
+  document.documentElement.lang = langValue;
+  localStorage.setItem(LANG_STORAGE_KEY, langValue);
+  markActiveOption(langOptions, "langValue", langValue);
+  applyTranslations();
+
+  // 언어가 바뀌면 번역문/주제 태그도 바뀌어야 하므로 같은 명언을 다시 그립니다.
+  const quote = quotesData.find((q) => q.id === currentQuoteId);
+  if (quote) renderQuote(quote);
+}
+
+/**
+ * data-i18n="키" 가 붙은 요소는 textContent를,
+ * data-i18n-aria="키" 가 붙은 요소는 aria-label을 현재 언어 값으로 바꿉니다.
+ */
+function applyTranslations() {
+  const dict = uiStrings[currentLang];
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (dict[key]) el.textContent = dict[key];
+  });
+
+  document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+    const key = el.dataset.i18nAria;
+    if (dict[key]) el.setAttribute("aria-label", dict[key]);
+  });
+}
+
+/**
+ * 옵션 버튼 목록(themeOptions 또는 langOptions) 중에서, dataset의
+ * datasetKey 값이 activeValue와 같은 버튼에만 is-active 클래스를 붙입니다.
+ */
+function markActiveOption(optionEls, datasetKey, activeValue) {
+  optionEls.forEach((option) => {
+    const isActive = option.dataset[datasetKey] === activeValue;
     option.classList.toggle("is-active", isActive);
   });
 }
@@ -132,7 +210,25 @@ function restoreSavedTheme() {
   if (saved) {
     document.body.dataset.theme = saved;
   }
-  markActiveThemeOption(document.body.dataset.theme);
+  markActiveOption(themeOptions, "themeValue", document.body.dataset.theme);
+}
+
+/**
+ * 페이지를 처음 열었을 때, 저장되어 있던 언어가 있으면 불러옵니다.
+ * 없으면 브라우저 설정 언어를 참고하고, 지원하지 않는 언어면 한국어로 시작합니다.
+ */
+function restoreSavedLanguage() {
+  const saved = localStorage.getItem(LANG_STORAGE_KEY);
+  if (saved && SUPPORTED_LANGS.includes(saved)) {
+    currentLang = saved;
+  } else {
+    const browserLang = (navigator.language || "ko").slice(0, 2);
+    currentLang = SUPPORTED_LANGS.includes(browserLang) ? browserLang : "ko";
+  }
+
+  document.documentElement.lang = currentLang;
+  markActiveOption(langOptions, "langValue", currentLang);
+  applyTranslations();
 }
 
 /**
@@ -155,7 +251,12 @@ function getCurrentQuoteText() {
   const quote = quotesData.find((q) => q.id === currentQuoteId);
   if (!quote) return "";
 
-  return `"${quote.quote_en}"\n"${quote.quote_ko}"\n— ${quote.speaker}, ${quote.movie}`;
+  const subtitle = getSubtitleText(quote);
+  const lines = [`"${quote.quote_en}"`];
+  if (subtitle) lines.push(`"${subtitle}"`);
+  lines.push(`— ${quote.speaker}, ${quote.movie}`);
+
+  return lines.join("\n");
 }
 
 /**
@@ -181,10 +282,10 @@ async function handleShare() {
 
   try {
     await navigator.clipboard.writeText(text);
-    showToast("클립보드에 복사했어요 ✅");
+    showToast(uiStrings[currentLang].toastCopied);
   } catch (error) {
     console.error("복사에 실패했어요:", error);
-    showToast("복사에 실패했어요 😢");
+    showToast(uiStrings[currentLang].toastCopyFailed);
   }
 }
 
@@ -192,11 +293,13 @@ async function handleShare() {
    4. 버튼/이벤트 연결
 ------------------------------------------ */
 btnShuffle.addEventListener("click", showNewQuote);
-btnTheme.addEventListener("click", openThemeModal);
+btnTheme.addEventListener("click", () => openSheet(themeModal));
+btnLang.addEventListener("click", () => openSheet(langModal));
 btnShare.addEventListener("click", handleShare);
 
-// 바텀시트 바깥(어두운 배경) 클릭 시 모달 닫기
-themeBackdrop.addEventListener("click", closeThemeModal);
+// 바텀시트 바깥(어두운 배경) 클릭 시 해당 모달 닫기
+themeBackdrop.addEventListener("click", () => closeSheet(themeModal));
+langBackdrop.addEventListener("click", () => closeSheet(langModal));
 
 // 각 테마 스와치 버튼 클릭 시 테마 적용
 themeOptions.forEach((option) => {
@@ -205,15 +308,23 @@ themeOptions.forEach((option) => {
   });
 });
 
-// 키보드 Esc 로도 바텀시트를 닫을 수 있게 합니다.
+// 각 언어 버튼 클릭 시 언어 적용
+langOptions.forEach((option) => {
+  option.addEventListener("click", () => {
+    applyLanguage(option.dataset.langValue);
+  });
+});
+
+// 키보드 Esc 로도 열려있는 바텀시트를 닫을 수 있게 합니다.
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !themeModal.hidden) {
-    closeThemeModal();
+  if (event.key === "Escape") {
+    closeAnyOpenSheet();
   }
 });
 
 /* -----------------------------------------
-   5. 앱 시작: 저장된 테마 복원 + 첫 명언 렌더링
+   5. 앱 시작: 저장된 테마/언어 복원 + 첫 명언 렌더링
 ------------------------------------------ */
 restoreSavedTheme();
+restoreSavedLanguage();
 renderQuote(pickRandomQuote());

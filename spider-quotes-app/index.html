@@ -9,80 +9,120 @@
 </head>
 <body data-theme="sunset">
 
-  <!-- ============================================
-       메인 화면: 명언 카드
-       ============================================ -->
-  <main id="quote-container" class="quote-container">
+  <!-- 태블릿/데스크탑에서는 이 래퍼 전체가 화면 중앙의 카드로 표시되고,
+       모바일에서는 화면 전체(엣지투엣지)를 채우는 레이아웃이 됩니다. -->
+  <div id="app-shell" class="app-shell">
 
-    <!-- 카드 위쪽에 살짝 보이는 거미줄 장식 마크 -->
-    <div class="quote-mark" aria-hidden="true">"</div>
+    <!-- ============================================
+         메인 화면: 명언 카드
+         ============================================ -->
+    <main id="quote-container" class="quote-container">
 
-    <!-- 영어 원문 -->
-    <p id="quote-en" class="quote-en"></p>
+      <!-- 카드 위쪽에 살짝 보이는 거미줄 장식 마크 -->
+      <div class="quote-mark" aria-hidden="true">"</div>
 
-    <!-- 한글 번역 -->
-    <p id="quote-ko" class="quote-ko"></p>
+      <!-- 영어 원문 (모든 언어에서 공통으로 표시되는 메인 문장) -->
+      <p id="quote-en" class="quote-en"></p>
 
-    <!-- 말한 사람 / 출처 작품 -->
-    <div class="quote-meta">
-      <p id="quote-speaker" class="quote-speaker"></p>
-      <p id="quote-movie" class="quote-movie"></p>
-    </div>
+      <!-- 번역문: 선택된 언어가 한국어/일본어일 때만 채워집니다.
+           (영어를 선택하면 원문과 중복되므로 비워두고, CSS :empty로 자동 숨김) -->
+      <p id="quote-sub" class="quote-sub"></p>
 
-    <!-- 주제 태그 뱃지 -->
-    <span id="quote-theme" class="quote-theme-badge"></span>
-  </main>
+      <!-- 말한 사람 / 출처 작품 -->
+      <div class="quote-meta">
+        <p id="quote-speaker" class="quote-speaker"></p>
+        <p id="quote-movie" class="quote-movie"></p>
+      </div>
 
-  <!-- ============================================
-       하단 액션 바: 새 명언 / 테마 변경 / 공유
-       ============================================ -->
-  <footer class="action-bar">
-    <button id="btn-shuffle" class="action-btn" type="button" aria-label="새 명언 보기">
-      <span class="icon">🔀</span>
-      <span class="label">새 명언</span>
-    </button>
+      <!-- 주제 태그 뱃지 -->
+      <span id="quote-theme" class="quote-theme-badge"></span>
+    </main>
 
-    <button id="btn-theme" class="action-btn" type="button" aria-label="테마 변경">
-      <span class="icon">🎨</span>
-      <span class="label">테마</span>
-    </button>
+    <!-- ============================================
+         하단 액션 바: 새 명언 / 테마 변경 / 언어 / 공유
+         ============================================ -->
+    <footer class="action-bar">
+      <button id="btn-shuffle" class="action-btn" type="button" data-i18n-aria="shuffleAria">
+        <span class="icon">🔀</span>
+        <span class="label" data-i18n="shuffleLabel">새 명언</span>
+      </button>
 
-    <button id="btn-share" class="action-btn" type="button" aria-label="명언 공유하기">
-      <span class="icon">📤</span>
-      <span class="label">공유</span>
-    </button>
-  </footer>
+      <button id="btn-theme" class="action-btn" type="button" data-i18n-aria="themeAria">
+        <span class="icon">🎨</span>
+        <span class="label" data-i18n="themeLabel">테마</span>
+      </button>
+
+      <button id="btn-lang" class="action-btn" type="button" data-i18n-aria="langAria">
+        <span class="icon">🌐</span>
+        <span class="label" data-i18n="langLabel">언어</span>
+      </button>
+
+      <button id="btn-share" class="action-btn" type="button" data-i18n-aria="shareAria">
+        <span class="icon">📤</span>
+        <span class="label" data-i18n="shareLabel">공유</span>
+      </button>
+    </footer>
+  </div>
 
   <!-- ============================================
        테마 선택 바텀시트 (기본은 숨김 상태 hidden)
        ============================================ -->
-  <div id="theme-modal" class="theme-modal" hidden>
-    <div id="theme-backdrop" class="theme-backdrop"></div>
+  <div id="theme-modal" class="sheet-modal" hidden>
+    <div id="theme-backdrop" class="sheet-backdrop"></div>
 
-    <div class="theme-sheet" role="dialog" aria-label="테마 선택">
-      <div class="theme-sheet-handle"></div>
-      <h2 class="theme-sheet-title">배경 테마 선택</h2>
+    <div class="bottom-sheet" role="dialog" aria-label="테마 선택">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" data-i18n="themeModalTitle">배경 테마 선택</h2>
 
-      <div class="theme-options">
-        <button class="theme-option" type="button" data-theme-value="sunset">
+      <div class="option-grid">
+        <button class="option-btn theme-option" type="button" data-theme-value="sunset">
           <span class="theme-swatch swatch-sunset"></span>
-          <span>선셋 그라데이션</span>
+          <span data-i18n="themeSunset">선셋 그라데이션</span>
         </button>
-        <button class="theme-option" type="button" data-theme-value="night">
+        <button class="option-btn theme-option" type="button" data-theme-value="night">
           <span class="theme-swatch swatch-night"></span>
-          <span>나이트 모드</span>
+          <span data-i18n="themeNight">나이트 모드</span>
         </button>
-        <button class="theme-option" type="button" data-theme-value="ocean">
+        <button class="option-btn theme-option" type="button" data-theme-value="ocean">
           <span class="theme-swatch swatch-ocean"></span>
-          <span>오션 블루</span>
+          <span data-i18n="themeOcean">오션 블루</span>
         </button>
-        <button class="theme-option" type="button" data-theme-value="forest">
+        <button class="option-btn theme-option" type="button" data-theme-value="forest">
           <span class="theme-swatch swatch-forest"></span>
-          <span>포레스트 그린</span>
+          <span data-i18n="themeForest">포레스트 그린</span>
         </button>
-        <button class="theme-option" type="button" data-theme-value="mono">
+        <button class="option-btn theme-option" type="button" data-theme-value="mono">
           <span class="theme-swatch swatch-mono"></span>
-          <span>미니멀 모노</span>
+          <span data-i18n="themeMono">미니멀 모노</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       언어 선택 바텀시트 (기본은 숨김 상태 hidden)
+       언어 이름(한국어/English/日本語)은 항상 그 나라 말 그대로
+       표시하는 것이 일반적인 관례라, data-i18n을 붙이지 않습니다.
+       ============================================ -->
+  <div id="lang-modal" class="sheet-modal" hidden>
+    <div id="lang-backdrop" class="sheet-backdrop"></div>
+
+    <div class="bottom-sheet" role="dialog" aria-label="언어 선택">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" data-i18n="langModalTitle">언어 선택</h2>
+
+      <div class="option-grid lang-grid">
+        <button class="option-btn lang-option" type="button" data-lang-value="ko">
+          <span class="lang-flag">🇰🇷</span>
+          <span>한국어</span>
+        </button>
+        <button class="option-btn lang-option" type="button" data-lang-value="en">
+          <span class="lang-flag">🇺🇸</span>
+          <span>English</span>
+        </button>
+        <button class="option-btn lang-option" type="button" data-lang-value="ja">
+          <span class="lang-flag">🇯🇵</span>
+          <span>日本語</span>
         </button>
       </div>
     </div>
@@ -91,8 +131,9 @@
   <!-- 복사/공유 완료 시 잠깐 떴다 사라지는 토스트 메시지 -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- data.js를 먼저 불러오고, 그 데이터를 사용하는 app.js를 나중에 불러옵니다. -->
+  <!-- 불러오는 순서가 중요합니다: 데이터 → 번역 사전 → 화면 로직 -->
   <script src="data.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
