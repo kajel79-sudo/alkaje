@@ -1,0 +1,377 @@
+/*
+  style.css
+  ---------------------------------------------------------
+  테마(배경/글자색/카드색)는 전부 "CSS 커스텀 프로퍼티(변수)"로
+  관리합니다. body 태그의 data-theme 값이 바뀌면(app.js에서 변경)
+  아래 [data-theme="..."] 블록이 새로 매칭되면서
+  --bg-gradient, --font-color, --card-bg 값만 바뀌고,
+  실제 카드/버튼 스타일 코드는 그대로 재사용됩니다.
+---------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system,
+    BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  color: var(--font-color);
+  transition: background 0.5s ease, color 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   테마별 색상 값 정의
+   ============================================ */
+body[data-theme="sunset"] {
+  --bg-gradient: linear-gradient(160deg, #2b0b3f 0%, #7b2ff7 45%, #f72585 100%);
+  --font-color: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --card-border: rgba(255, 255, 255, 0.25);
+  --accent: #ff4d6d;
+  --sub-color: rgba(255, 255, 255, 0.75);
+}
+
+body[data-theme="night"] {
+  --bg-gradient: linear-gradient(160deg, #05070f 0%, #0d1626 55%, #1b2a4a 100%);
+  --font-color: #f2f4ff;
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(255, 255, 255, 0.15);
+  --accent: #4ea1ff;
+  --sub-color: rgba(242, 244, 255, 0.65);
+}
+
+body[data-theme="ocean"] {
+  --bg-gradient: linear-gradient(160deg, #001e3c 0%, #0466c8 60%, #33a1fd 100%);
+  --font-color: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --card-border: rgba(255, 255, 255, 0.25);
+  --accent: #ffd60a;
+  --sub-color: rgba(255, 255, 255, 0.75);
+}
+
+body[data-theme="forest"] {
+  --bg-gradient: linear-gradient(160deg, #0b1f14 0%, #1b4332 55%, #40916c 100%);
+  --font-color: #f1faee;
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.2);
+  --accent: #95d5b2;
+  --sub-color: rgba(241, 250, 238, 0.7);
+}
+
+body[data-theme="mono"] {
+  --bg-gradient: linear-gradient(160deg, #f5f5f5 0%, #e8e8e8 100%);
+  --font-color: #111111;
+  --card-bg: rgba(0, 0, 0, 0.04);
+  --card-border: rgba(0, 0, 0, 0.12);
+  --accent: #e63946;
+  --sub-color: rgba(17, 17, 17, 0.6);
+}
+
+/* ============================================
+   메인 명언 카드
+   ============================================ */
+.quote-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  gap: 16px;
+  position: relative;
+
+  /* 새 명언으로 바뀔 때 페이드+이동 애니메이션에 쓰이는 기본 상태 */
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* app.js가 명언을 바꾸는 순간 잠깐 부여하는 클래스 */
+.quote-container.is-fading {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.quote-mark {
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.85;
+  font-family: Georgia, serif;
+}
+
+.quote-en {
+  font-size: clamp(20px, 5.5vw, 28px);
+  font-weight: 700;
+  line-height: 1.4;
+  max-width: 520px;
+  margin: 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.quote-ko {
+  font-size: clamp(15px, 4vw, 17px);
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0;
+  color: var(--sub-color);
+}
+
+.quote-meta {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quote-speaker {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.quote-movie {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sub-color);
+}
+
+.quote-theme-badge {
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(6px);
+}
+
+/* ============================================
+   하단 액션 바 (새 명언 / 테마 / 공유)
+   ============================================ */
+.action-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
+}
+
+.action-btn {
+  flex: 1;
+  max-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  color: var(--font-color);
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.action-btn:active {
+  transform: scale(0.94);
+}
+
+.action-btn .icon {
+  font-size: 20px;
+}
+
+.action-btn .label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ============================================
+   테마 선택 바텀시트
+   ============================================ */
+.theme-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* hidden 속성이 붙으면 모달 전체가 렌더링되지 않음 */
+.theme-modal[hidden] {
+  display: none;
+}
+
+.theme-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.25s ease;
+}
+
+.theme-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: #1c1c22;
+  color: #ffffff;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 24px calc(28px + env(safe-area-inset-bottom));
+  animation: slideUp 0.3s ease;
+}
+
+.theme-sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 4px auto 16px;
+}
+
+.theme-sheet-title {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.theme-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: block;
+}
+
+.theme-option.is-active .theme-swatch {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.swatch-sunset {
+  background: linear-gradient(160deg, #7b2ff7, #f72585);
+}
+.swatch-night {
+  background: linear-gradient(160deg, #0d1626, #1b2a4a);
+}
+.swatch-ocean {
+  background: linear-gradient(160deg, #0466c8, #33a1fd);
+}
+.swatch-forest {
+  background: linear-gradient(160deg, #1b4332, #40916c);
+}
+.swatch-mono {
+  background: linear-gradient(160deg, #f5f5f5, #cccccc);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   토스트 메시지 (복사/공유 완료 알림)
+   ============================================ */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 100px;
+  transform: translate(-50%, 12px);
+  background: rgba(20, 20, 20, 0.92);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 100;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ============================================
+   모바일(375~430px) 최적화
+   ============================================ */
+@media (max-width: 430px) {
+  .quote-container {
+    padding: 24px 20px;
+  }
+
+  .theme-options {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .action-btn .label {
+    display: none; /* 아주 좁은 화면에서는 아이콘만 표시 */
+  }
+}
+
+@media (min-width: 431px) {
+  .theme-modal {
+    align-items: center;
+  }
+
+  .theme-sheet {
+    border-radius: 24px;
+  }
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <!-- 모바일 화면 폭에 맞춰 렌더링하도록 하는 필수 태그 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Spider-Quotes | 스파이더맨 명언록</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="sunset">
+
+  <!-- ============================================
+       메인 화면: 명언 카드
+       ============================================ -->
+  <main id="quote-container" class="quote-container">
+
+    <!-- 카드 위쪽에 살짝 보이는 거미줄 장식 마크 -->
+    <div class="quote-mark" aria-hidden="true">"</div>
+
+    <!-- 영어 원문 -->
+    <p id="quote-en" class="quote-en"></p>
+
+    <!-- 한글 번역 -->
+    <p id="quote-ko" class="quote-ko"></p>
+
+    <!-- 말한 사람 / 출처 작품 -->
+    <div class="quote-meta">
+      <p id="quote-speaker" class="quote-speaker"></p>
+      <p id="quote-movie" class="quote-movie"></p>
+    </div>
+
+    <!-- 주제 태그 뱃지 -->
+    <span id="quote-theme" class="quote-theme-badge"></span>
+  </main>
+
+  <!-- ============================================
+       하단 액션 바: 새 명언 / 테마 변경 / 공유
+       ============================================ -->
+  <footer class="action-bar">
+    <button id="btn-shuffle" class="action-btn" type="button" aria-label="새 명언 보기">
+      <span class="icon">🔀</span>
+      <span class="label">새 명언</span>
+    </button>
+
+    <button id="btn-theme" class="action-btn" type="button" aria-label="테마 변경">
+      <span class="icon">🎨</span>
+      <span class="label">테마</span>
+    </button>
+
+    <button id="btn-share" class="action-btn" type="button" aria-label="명언 공유하기">
+      <span class="icon">📤</span>
+      <span class="label">공유</span>
+    </button>
+  </footer>
+
+  <!-- ============================================
+       테마 선택 바텀시트 (기본은 숨김 상태 hidden)
+       ============================================ -->
+  <div id="theme-modal" class="theme-modal" hidden>
+    <div id="theme-backdrop" class="theme-backdrop"></div>
+
+    <div class="theme-sheet" role="dialog" aria-label="테마 선택">
+      <div class="theme-sheet-handle"></div>
+      <h2 class="theme-sheet-title">배경 테마 선택</h2>
+
+      <div class="theme-options">
+        <button class="theme-option" type="button" data-theme-value="sunset">
+          <span class="theme-swatch swatch-sunset"></span>
+          <span>선셋 그라데이션</span>
+        </button>
+        <button class="theme-option" type="button" data-theme-value="night">
+          <span class="theme-swatch swatch-night"></span>
+          <span>나이트 모드</span>
+        </button>
+        <button class="theme-option" type="button" data-theme-value="ocean">
+          <span class="theme-swatch swatch-ocean"></span>
+          <span>오션 블루</span>
+        </button>
+        <button class="theme-option" type="button" data-theme-value="forest">
+          <span class="theme-swatch swatch-forest"></span>
+          <span>포레스트 그린</span>
+        </button>
+        <button class="theme-option" type="button" data-theme-value="mono">
+          <span class="theme-swatch swatch-mono"></span>
+          <span>미니멀 모노</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 복사/공유 완료 시 잠깐 떴다 사라지는 토스트 메시지 -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- data.js를 먼저 불러오고, 그 데이터를 사용하는 app.js를 나중에 불러옵니다. -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
